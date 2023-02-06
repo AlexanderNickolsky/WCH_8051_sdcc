@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name "MCU_WCH")(type "KiCad")(uri "${KICAD_SYMBOL_DIR}/MCU_WCH.kicad_sym")(options "")(descr ""))
+)
