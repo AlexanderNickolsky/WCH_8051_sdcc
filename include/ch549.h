@@ -327,7 +327,7 @@ SFR(IP_EX,	IP_EX_ADDR);	// extend interrupt priority
 #define bIP_INT3          0x02      // touch-key timer interrupt priority level
 #define bIP_SPI0          0x01      // SPI0 interrupt priority level
 
-SFR(GPIO_IE,  GPIO_IE_ADDR);	    // GPIO interrupt enable
+SFR(GPIO_IE,  GPIO_IE_ADDR);	// GPIO interrupt enable
 #define bIE_IO_EDGE       0x80      // enable GPIO edge interrupt: 0=low/high level, 1=falling/rising edge
 #define bIE_RXD1_LO       0x40      // enable interrupt by RXD1 low level / falling edge
 #define bIE_P1_5_LO       0x20      // enable interrupt by pin P1.5 low level / falling edge
@@ -337,68 +337,85 @@ SFR(GPIO_IE,  GPIO_IE_ADDR);	    // GPIO interrupt enable
 #define bIE_P4_6_LO       0x02      // enable interrupt by pin P3.1 low level / falling edge
 #define bIE_RXD0_LO       0x01      // enable interrupt by RXD0 low level / falling edge
 
-SFR(INTX, INTX_ADDR);  // Extended external interrupt control register
-#define bIX3              0x20      // Input signal polarity of INT3
-                                    // 0: Select default polarity (low level or falling edge trigger).
-                                    // 1: Select reverse polarity (high level or rising edge trigger)
-#define bIE3              0x08      // INT3 interrupt request flag bit. Reset automatically after it enters interrupt
-#define bIT3              0x04      // Trigger mode control bit of INT3
-                                    // 0: Select low or high level trigger for external interrupt.
-                                    // 1: Select falling or rising edge trigger for external interrupt
-
 /*  FlashROM and Data-Flash Registers  */
+#define ROM_PAGE_SIZE     0x40      // FlashROM page size ( number of bytes )
 SFR16(ROM_ADDR,	ROM_ADDR_L_ADDR);	// address for flash-ROM, little-endian
 SFR(ROM_ADDR_L,	ROM_ADDR_L_ADDR);	// address low byte for flash-ROM
 SFR(ROM_ADDR_H,	ROM_ADDR_H_ADDR);	// address high byte for flash-ROM
 SFR16(ROM_DATA,	ROM_DATA_HL_ADDR);	// data for flash-ROM writing, little-endian
 SFR(ROM_DATA_L,	ROM_DATA_HL_ADDR);	// data low byte for flash-ROM writing, data byte for Data-Flash reading/writing
+SFR(ROM_DAT_BUF,ROM_DATA_HL_ADDR);	// data butter register for flash-ROM erase/program operation
 SFR(ROM_DATA_H,	ROM_DATA_HH_ADDR);	// data high byte for flash-ROM writing
+SFR(ROM_BUF_MOD, ROM_BUF_MOD_ADDR); // Buffer mode register for flash-ROM erase/program operation
 SFR(ROM_CTRL,	ROM_CTRL_ADDR);	    // WriteOnly: flash-ROM control
 #define ROM_CMD_ERASE     0xA6      // flash-ROM erase operation command
 #define ROM_CMD_WRITE     0x9A      // flash-ROM word or Data-Flash byte write operation command
+#define ROM_CMD_PROG      0x9A
 #define ROM_CMD_READ      0x8E      // Data-Flash byte read operation command
+#define ROM_CMD_RD_OTP    0x8D      // WriteOnly: OTP area dword read operation command
+#define ROM_CMD_PG_OTP    0x99      // WriteOnly: OTP area byte/page program operation command
+#define bROM_BUF_BYTE     0x80      // Buffer mode for flash-ROM erase/program operation:
+                                    // 0: Select the data block programming mode, and the
+                                    // data to be written is stored in xRAM pointed to by
+                                    // DPTR. During programming, CH549 will
+                                    // automatically fetch data from xRAM in sequence and
+                                    // temporarily store it in ROM_DAT_BUF and then write
+                                    // into flash-ROM; support 1-byte to 64-byte data length,
+                                    // and the actual length = MASK_ROM_ADR_END-ROM_ADDR_L[5:0]+1;
+                                    // 1: Select single-byte programming or 64-byte block
+                                    // erase mode, and the data to be written is directly stored
+                                    // in ROM_DAT_BUF
+#define MASK_ROM_ADDR     0x3F      // bit mask for end address for flash-ROM block program if bROM_BUF_BYTE=0
+
 
 SFR(ROM_STATUS,	ROM_STATUS_ADDR);   // ReadOnly: ROM status SFR
 #define bROM_ADDR_OK      0x40      // ReadOnly: flash-ROM writing operation address valid flag, can be reviewed before or after operation: 0=invalid parameter, 1=address valid
 #define bROM_CMD_ERR      0x02      // ReadOnly: flash-ROM operation command error flag: 0=command accepted, 1=unknown command
 
 /*  Port Registers  */
-SFR(P0,	P0_ADDR);	// port 0 input & output
-   SBIT(P0_7,   P0_ADDR, 7); // TXD3, AIN15, P0.7
-   SBIT(TXD3,   P0_ADDR, 7);
-   SBIT(AIN15,  P0_ADDR, 7);
-   SBIT(P0_6,   P0_ADDR, 6); // RXD3/bRXD3, AIN14, P0.6
-   SBIT(RXD3,   P0_ADDR, 6);
-   #define bRXD3     _BV(6)
-   SBIT(P0_5,   P0_ADDR, 5); // TXD2/bTXD2, AIN13, P0.5
-   SBIT(TXD2,   P0_ADDR, 5);
-   #define bTXD2     _BV(5)
-   SBIT(AIN13,  P0_ADDR, 5);
-   SBIT(P0_4,   P0_ADDR, 4); // RXD2/bRXD2, AIN12, P0.4
-   SBIT(RXD2,   P0_ADDR, 4);
-   #define bRXD2     _BV(4)
-   SBIT(AIN12,  P0_ADDR, 4);
-   SBIT(P0_3,   P0_ADDR, 3); // TXD_/bTXD_, AIN11, P0.3
-   SBIT(TXD_,   P0_ADDR, 3);
-   #define bTXD_     _BV(3)
-   SBIT(AIN11,  P0_ADDR, 3);
-   SBIT(P0_2,   P0_ADDR, 2); // RXD_/bRXD_, AIN10, P0.2
-   SBIT(RXD_,   P0_ADDR, 2);
-   #define bRXD_     _BV(2)
-   SBIT(AIN10,  P0_ADDR, 2);
-   SBIT(P0_1,   P0_ADDR, 1); // AIN9, P0.1
-   SBIT(AIN9,   P0_ADDR, 1);
-   SBIT(P0_0,   P0_ADDR, 0);// AIN8, P0.0
-   SBIT(AIN8,   P0_ADDR, 0);
 
-SFR(P0_MOD_OC,	P0_MOD_OC_ADDR);	// port 0 output mode: 0=push-pull, 1=open-drain
-SFR(P0_DIR_PU,	P0_DIR_PU_ADDR);	// port 0 direction for push-pull or pullup enable for open-drain
-// Pn_MOD_OC & Pn_DIR_PU: pin input & output configuration for Pn (n=1/3)
-//   0 0:  High impedance input mode, without pullup resistance
-//   0 1:  push-pull output, strong driving high level and low level
-//   1 0:  open-drain output and input without pullup resistance
-//   1 1:  quasi-bidirectional (standard 8051 mode), open-drain output and input with pullup resistance, just driving
-//         high level strongly for 2 clocks if turning output level from low to high
+SFR(P0,P0_ADDR);
+SBIT(P0_7,P0_ADDR,7);
+SBIT(P0_6,P0_ADDR,6);
+SBIT(P0_5,P0_ADDR,5);
+SBIT(P0_4,P0_ADDR,4);
+SBIT(P0_3,P0_ADDR,3);
+SBIT(P0_2,P0_ADDR,2);
+SBIT(P0_1,P0_ADDR,1);
+SBIT(P0_0,P0_ADDR,0);
+SBIT(TXD3,P0_ADDR,7);         // TXD output for UART3
+SBIT(AIN15,P0_ADDR,7);         // AIN15 for ADC
+SBIT(RXD3,P0_ADDR,6);         // RXD input for UART3
+SBIT(AIN14,P0_ADDR,6);         // AIN14 for ADC
+SBIT(TXD2,P0_ADDR,5);         // TXD output for UART2
+SBIT(AIN13,P0_ADDR,5);         // AIN13 for ADC
+SBIT(RXD2,P0_ADDR,4);         // RXD input for UART2
+SBIT(AIN12,P0_ADDR,4);         // AIN12 for ADC
+SBIT(TXD_,P0_ADDR,3);         // alternate pin for TXD of UART0
+SBIT(AIN11,P0_ADDR,3);         // AIN11 for ADC
+SBIT(RXD_,P0_ADDR,2);         // alternate pin for RXD of UART0
+SBIT(AIN10,P0_ADDR,2);         // AIN10 for ADC
+SBIT(AIN9,P0_ADDR,1);         // AIN9 for ADC
+SBIT(AIN8,P0_ADDR,0);         // AIN8 for ADC
+
+SFR(P0_MOD_OC, P0_MOD_OC_ADDR);     // port 0 output mode: 0=push-pull, 1=open-drain
+SFR(P0_DIR_PU, P0_DIR_PU_ADDR);     // port 0 direction for push-pull or pullup enable for open-drain
+#define bTXD3             0x80      // TXD output for UART3
+#define bAIN15            0x80      // AIN15 for ADC
+#define bRXD3             0x40      // RXD input for UART3
+#define bAIN14            0x40      // AIN14 for ADC
+#define bTXD2             0x20      // TXD output for UART2
+#define bAIN13            0x20      // AIN13 for ADC
+#define bRXD2             0x10      // RXD input for UART2
+#define bAIN12            0x10      // AIN12 for ADC
+#define bTXD_             0x08      // alternate pin for TXD of UART0
+#define bAIN11            0x08      // AIN11 for ADC
+#define bRXD_             0x04      // alternate pin for RXD of UART0
+#define bAIN10            0x04      // AIN10 for ADC
+#define bAIN9             0x02      // AIN9 for ADC
+#define bAIN8             0x01      // AIN8 for ADC
+
+
 
 SFR(P1,	P1_ADDR);	// port 1 input & output
    SBIT(P1_7,   P1_ADDR, 7);    // SCK/bSCK, TXD1_/bTXD1_, AIN7, P1.7
@@ -452,6 +469,12 @@ SFR(P1,	P1_ADDR);	// port 1 input & output
 
 SFR(P1_MOD_OC,	P1_MOD_OC_ADDR);	// port 1 output mode: 0=push-pull, 1=open-drain
 SFR(P1_DIR_PU,	P1_DIR_PU_ADDR);	// port 1 direction for push-pull or pullup enable for open-drain
+// Pn_MOD_OC & Pn_DIR_PU: pin input & output configuration for Pn (n=1/3)
+//   0 0:  High impedance input mode, without pullup resistance
+//   0 1:  push-pull output, strong driving high level and low level
+//   1 0:  open-drain output and input without pullup resistance
+//   1 1:  quasi-bidirectional (standard 8051 mode), open-drain output and input with pullup resistance, just driving
+//         high level strongly for 2 clocks if turning output level from low to high
 
 SFR(P2,	P2_ADDR);	// port 2
    SBIT(P2_7,   P2_ADDR, 7);   // PWM7/bPWM7, TXD1/bTXD1, P2.7
@@ -545,13 +568,15 @@ SFR(P4_MOD_OC,	P4_MOD_OC_ADDR);// port 4 output mode: 0=push-pull, 1=open-drain
 SFR(P4_DIR_PU,	P4_DIR_PU_ADDR);// port 4 direction for push-pull or pullup enable for open-drain
 
 SFR(P5,	P5_ADDR);
-#define bP5_7 0x80   // Read Only P5.7 pin state input bit
-#define bP5_5 0x20   // P5.5 pin data output bit (open-drain output, support high voltage):
-                     // 0: Output low level.
-                     // 1: No output (high impedance, support external pull-up resistor)
-#define bP5_4 0x10   // P5.4 pin data output bit
-#define bP5_1 0x02   // P5.1 pin state input bit, built-in controllable pull-down resistor
-#define bP5_0 0x01   // P5.0 pin state input bit, built-in controllable pull-down resistor
+#define bRST              0x80      // ReadOnly: pin RST input
+#define bHVOD             0x20      // HVOD pin for high voltage open drain output
+#define bALE              0x10      // ALE pin for GPO
+#define bCKO              bALE      // ALE clock output
+#define bUDP              0x02      // ReadOnly: pin UDP input
+#define bDP               0x02      // ReadOnly: pin UDP input
+#define bUDM              0x01      // ReadOnly: pin UDM input
+#define bDM               0x01      // ReadOnly: pin UDM input
+
 
 SFR(PIN_FUNC,	PIN_FUNC_ADDR);	// pin function selection
 #define bPWM0_PIN_X       0x80      // PWM0 pin mapping enable bit 0: P2.5. 1: P1.5.
@@ -758,26 +783,61 @@ SFR(SPI0_SETUP,	SPI0_SETUP_ADDR);	// SPI 0 setup
 
 /*  UART1 Registers  */
 SFR(SCON1,	SCON1_ADDR);	// UART1 control (serial port control)
-   SBIT(U1SM0,	SCON1_ADDR, 7);	// UART1 mode, selection data bit: 0=8 bits data, 1=9 bits data
-   SBIT(U1SMOD,	SCON1_ADDR, 5);	// UART1 2X baud rate selection: 0=slow(Fsys/32/(256-SBAUD1)), 1=fast(Fsys/16/(256-SBAUD1))
-   SBIT(U1REN,	SCON1_ADDR, 4);	// enable UART1 receiving
-   SBIT(U1TB8,	SCON1_ADDR, 3);	// the 9th transmitted data bit in 9 bits data mode
-   SBIT(U1RB8,	SCON1_ADDR, 2);	// 9th data bit received in 9 bits data mode, or stop bit received for 8 bits data mode
-   SBIT(U1TIS,	SCON1_ADDR, 1);	// Write 1 to preset the transmit interrupt flag bit as 1. For read operation, always return 0
-   SBIT(U1RIS,	SCON1_ADDR, 0);	// Write 1 to preset the receive interrupt flag bit as 1. For read operation, always return 0.
+#define bU1SM0            0x80      // UART1 mode, selection data bit: 0=8 bits data, 1=9 bits data
+#define bU1SMOD           0x20      // UART1 2X baud rate selection: 0=slow(Fsys/32/(256-SBAUD1)), 1=fast(Fsys/16/(256-SBAUD1))
+#define bU1REN            0x10      // enable UART1 receiving
+#define bU1TB8            0x08      // the 9th transmitted data bit in 9 bits data mode
+#define bU1RB8            0x04      // 9th data bit received in 9 bits data mode, or stop bit received for 8 bits data mode
+#define bU1TIS            0x02      // WriteOnly: write 1 to preset transmit interrupt flag
+#define bU1RIS            0x01      // WriteOnly: write 1 to preset receive interrupt flag
 
 SFR(SBUF1,	SBUF1_ADDR);	// UART1 data buffer: reading for receiving, writing for transmittal
 SFR(SBAUD1,	SBAUD1_ADDR);	// UART1 baud rate setting
+SFR(SIF1, SIF1_ADDR);
+#define bU1TI             0x02      // transmit interrupt flag, set by hardware after completion of a serial transmittal, need software write 1 to clear
+#define bU1RI             0x01      // receive interrupt flag, set by hardware after completion of a serial receiving, need software write 1 to clear
+
+SFR(SCON2,SCON2_ADDR);              // UART2 control (serial port control)
+#define bU2SM0            0x80      // UART2 mode, selection data bit: 0=8 bits data, 1=9 bits data
+#define bU2IE             0x40      // UART2 interrupt enable: 0=disable interrupt, 1=enable interrupt instead of ADC
+#define bU2SMOD           0x20      // UART2 2X baud rate selection: 0=slow(Fsys/32/(256-SBAUD2)), 1=fast(Fsys/16/(256-SBAUD2))
+#define bU2REN            0x10      // enable UART2 receiving
+#define bU2TB8            0x08      // the 9th transmitted data bit in 9 bits data mode
+#define bU2RB8            0x04      // 9th data bit received in 9 bits data mode, or stop bit received for 8 bits data mode
+#define bU2TIS            0x02      // WriteOnly: write 1 to preset transmit interrupt flag
+#define bU2RIS            0x01      // WriteOnly: write 1 to preset receive interrupt flag
+SFR(SBUF2,SBUF2_ADDR);              // UART2 data buffer: reading for receiving, writing for transmittal
+SFR(SBAUD2,SBAUD2_ADDR);            // UART2 baud rate setting
+SFR(SIF2, SIF2_ADDR);               // UART2 interrupt flag
+#define bU2TI             0x02      // transmit interrupt flag, set by hardware after completion of a serial transmittal, need software write 1 to clear
+#define bU2RI             0x01      // receive interrupt flag, set by hardware after completion of a serial receiving, need software write 1 to clear
+
+/*  UART3 Registers  */
+SFR(SCON3, SCON3_ADDR);             // UART3 control (serial port control)
+#define bU3SM0            0x80      // UART3 mode, selection data bit: 0=8 bits data, 1=9 bits data
+#define bU3IE             0x40      // UART3 interrupt enable: 0=disable interrupt, 1=enable interrupt instead of PWMX
+#define bU3SMOD           0x20      // UART3 2X baud rate selection: 0=slow(Fsys/32/(256-SBAUD3)), 1=fast(Fsys/16/(256-SBAUD3))
+#define bU3REN            0x10      // enable UART3 receiving
+#define bU3TB8            0x08      // the 9th transmitted data bit in 9 bits data mode
+#define bU3RB8            0x04      // 9th data bit received in 9 bits data mode, or stop bit received for 8 bits data mode
+#define bU3TIS            0x02      // WriteOnly: write 1 to preset transmit interrupt flag
+#define bU3RIS            0x01      // WriteOnly: write 1 to preset receive interrupt flag
+SFR(SBUF3, SBUF3_ADDR);             // UART3 data buffer: reading for receiving, writing for transmittal
+SFR(SBAUD3, SBAUD3_ADDR);           // UART3 baud rate setting
+SFR(SIF3, SIF3_ADDR);               // UART3 interrupt flag
+#define bU3TI             0x02      // transmit interrupt flag, set by hardware after completion of a serial transmittal, need software write 1 to clear
+#define bU3RI             0x01      // receive interrupt flag, set by hardware after completion of a serial receiving, need software write 1 to clear
+
 
 /*  ADC and comparator Registers  */
 
-SFR(ADC_CTRL,	ADC_CTRL_ADDR);	// ADC control
-   SBIT(CMPDO,	ADC_CTRL_ADDR, 7);	// ReadOnly: comparator result input
-   SBIT(CMP_IF,	ADC_CTRL_ADDR, 6);	// flag for comparator result changed, direct bit address clear
-   SBIT(ADC_IF,	ADC_CTRL_ADDR, 5);	// interrupt flag for ADC finished, direct bit address clear
-   SBIT(ADC_START,	ADC_CTRL_ADDR, 4);	// set 1 to start ADC, auto cleared when ADC finished
-   SBIT(TKEY_ACT,	ADC_CTRL_ADDR, 3);	// Indicate the touch key detection running state
-   SBIT(CMPO,	ADC_CTRL_ADDR, 0);	// ADC/comparator IN+ channel selection low bit
+SFR(ADC_CTRL,	ADC_CTRL_ADDR);	    // ADC control
+#define bCMPDO            0x80      // ReadOnly: comparator result synchronous delay input
+#define bCMP_IF           0x40      // interrupt flag for comparator result changed, write 1 to clear
+#define bADC_IF           0x20      // interrupt flag for ADC finished, write 1 to clear or write TKEY_CTRL to clear
+#define bADC_START        0x10      // set 1 to start ADC, auto cleared when ADC finished
+#define bTKEY_ACT         0x08      // ReadOnly: indicate touch-key running status (charge then ADC)
+#define bCMPO             0x01      // ReadOnly: comparator result real time input
 // ADC_CHAN1 & ADC_CHAN0: ADC/comparator IN+ channel selection
 //   00: AIN0(P1.1)
 //   01: AIN1(P1.4)
@@ -803,6 +863,46 @@ SFR(ADC_CFG,	ADC_CFG_ADDR);	// ADC config
 SFR16(ADC_DATA, ADC_DAT_L_ADDR);    // ReadOnly: ADC data
 SFR(ADC_DATA_L, ADC_DAT_L_ADDR);
 SFR(ADC_DATA_H, ADC_DAT_H_ADDR);
+SFR(ADC_CHAN, ADC_CHAN_ADDR);       // ADC analog signal channel seletion
+
+#define MASK_CMP_CHAN     0xC0      // bit mask of comparator IN- input signal channel selection
+// bCMP_EN & bVDD_REF_EN & MASK_CMP_CHAN[1] & [0]: comparator IN- input signal channel selection
+//   0xxx: disconnect / float
+//   1000: disconnect / float
+//   1100: connect VDD/8
+//   1001: connect VDD
+//   1101: connect VDD/4
+//   1x10: connect AIN1(P1.1)
+//   1x11: connect AIN2(P1.2)
+#define MASK_ADC_I_CH     0x30      // bit mask of ADC/comparator IN+ input internal signal channel selection
+// bADC_EN & bADC_AIN_EN & bVDD_REF_EN & MASK_ADC_I_CH[1] & [0]: ADC/comparator IN+ input internal signal channel selection
+//   xx000: disconnect internal signal / float
+//   xx100: connect VDD/2
+//   xxx01: connect V33
+//   xxx10: connect V33/1.83
+//   10x11: connect temperature sense
+//   0xx11: disconnect internal signal / float
+//   x1x11: disconnect internal signal / float
+#define MASK_ADC_CHAN     0x0F      // bit mask of ADC/comparator IN+ input external signal channel selection if bADC_AIN_EN=1
+// bADC_AIN_EN & MASK_ADC_CHAN[3] & [2] & [1] & [0]: ADC/comparator IN+ input external signal channel selection
+//   0xxxx: disconnect external signal AIN0~AIN15 / float
+//   10000: connect AIN0(P1.0)
+//   10001: connect AIN1(P1.1)
+//   10010: connect AIN2(P1.2)
+//   10011: connect AIN3(P1.3)
+//   10100: connect AIN4(P1.4)
+//   10101: connect AIN5(P1.5)
+//   10110: connect AIN6(P1.6)
+//   10111: connect AIN7(P1.7)
+//   11000: connect AIN8(P0.0)
+//   11001: connect AIN9(P0.1)
+//   11010: connect AIN10(P0.2)
+//   11011: connect AIN11(P0.3)
+//   11100: connect AIN12(P0.4)
+//   11101: connect AIN13(P0.5)
+//   11110: connect AIN14(P0.6)
+//   11111: connect AIN15(P0.7)
+
 
 SFR(ADC_PIN, ADC_PIN_ADDR);
 #define bAIN14_15_DI_DIS 0x80

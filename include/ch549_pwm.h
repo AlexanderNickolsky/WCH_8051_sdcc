@@ -23,6 +23,10 @@ extern void  PWMInterruptEnable();                                            //
 #define SetPWM6Dat(dat)  (PWM_DATA6 = dat)
 #define SetPWM7Dat(dat)  (PWM_DATA7 = dat)
 
+#define GetPWM1Dat()     (PWM_DATA1)
+#define GetPWM2Dat()     (PWM_DATA2)
+#define GetPWM3Dat()     (PWM_DATA3)
+
 #if defined(CH549G) || defined(CH548G)
   #undef SetPWM2Dat
   #undef SetPWM4Dat
