@@ -221,7 +221,7 @@ SFR(WDOG_COUNT,	WDOG_COUNT_ADDR);	// watch-dog count, count by clock frequency F
 
 /*  Interrupt Registers  */
 SFR(IE,	IE_ADDR);	// interrupt enable
-   SBIT(EA,	IE_ADDR, 7);	// enable global interrupts: 0=disable, 1=enable if E_DIS=0
+   SBIT(EA,	    IE_ADDR, 7);	// enable global interrupts: 0=disable, 1=enable if E_DIS=0
    SBIT(E_DIS,	IE_ADDR, 6);	// disable global interrupts, intend to inhibit interrupt during some flash-ROM operation: 0=enable if EA=1, 1=disable
    SBIT(ET2,	IE_ADDR, 5);	// enable timer2 interrupt
    SBIT(ES,	    IE_ADDR, 4);	// enable UART0 interrupt
