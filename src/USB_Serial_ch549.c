@@ -1,6 +1,6 @@
-#include <ch552.h>
+#include <ch549.h>
 #include <string.h>
-#include <ch552_usb.h>
+#include <ch549_usb.h>
 #include "USB_Serial.h"
 
 #define  THIS_ENDP0_SIZE         DEFAULT_ENDP0_SIZE
