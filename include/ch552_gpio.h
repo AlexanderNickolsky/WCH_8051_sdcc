@@ -2,6 +2,8 @@
 
 // CH552 GPIO functions
 
+
+
 // Mode:
 // PP = Push-Pull
 // OD = Open Drain
@@ -29,4 +31,19 @@
 #define P3SetModePP_OUTPUT(mask)     ((P3_MOD_OC &=  ~(mask)),  (P3_DIR_PU |=    (mask)))
 #define P3SetModeOD_NO_PULLUP(mask)  ((P3_MOD_OC |=   (mask)),  (P3_DIR_PU &=  ~ (mask)))
 #define P3SetModeOD_PULLUP(mask)     ((P3_MOD_OC |=   (mask)),  (P3_DIR_PU |=    (mask)))
+
+// Interrupt handling
+// ISR. It calls the user defined routine
+#define PINCHANGE_INTERRUPT(handler) void handler(void); void GPIOPinChangeInterrupt(void) __interrupt (INT_NO_GPIO) { handler(); }
+
+// Pin change interrupt enable. Pin may be P1_4, P1_5, P1_3 or P3_1.
+// Interrupt occurs if the pin goes low from high
+#define EnablePinChangeIntr(pin) GPIO_IE |= (bIE_IO_EDGE | bIE_##pin##_LO)
+// To get actual interrups it is necessary to enable GPIO interrupts by setting
+// IE_GPIO  = 1;
+#define EnableGPIOInterrupt() IE_GPIO = 1
+// and also set the global interrupt flag
+// EA = 1;
+#define DisablePinChangeIntr(pin) GPIO_IE &= ~bIE_##pin##_LO
+
 

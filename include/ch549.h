@@ -279,7 +279,7 @@ SFR(WDOG_COUNT,	WDOG_COUNT_ADDR);	// watch-dog count, count by clock frequency F
 
 /*  Interrupt Registers  */
 SFR(IE,	IE_ADDR);	            // interrupt enable
-   SBIT(EA,	IE_ADDR, 7);	    // enable global interrupts: 0=disable, 1=enable if E_DIS=0
+   SBIT(EA,	    IE_ADDR, 7);	// enable global interrupts: 0=disable, 1=enable if E_DIS=0
    SBIT(E_DIS,	IE_ADDR, 6);	// disable global interrupts, intend to inhibit interrupt during some flash-ROM operation: 0=enable if EA=1, 1=disable
    SBIT(ET2,	IE_ADDR, 5);	// enable timer2 interrupt
    SBIT(ES,	    IE_ADDR, 4);	// enable UART0 interrupt
@@ -339,14 +339,19 @@ SFR(GPIO_IE,  GPIO_IE_ADDR);	// GPIO interrupt enable
 
 /*  FlashROM and Data-Flash Registers  */
 #define ROM_PAGE_SIZE     0x40      // FlashROM page size ( number of bytes )
-SFR16(ROM_ADDR,	ROM_ADDR_L_ADDR);	// address for flash-ROM, little-endian
-SFR(ROM_ADDR_L,	ROM_ADDR_L_ADDR);	// address low byte for flash-ROM
-SFR(ROM_ADDR_H,	ROM_ADDR_H_ADDR);	// address high byte for flash-ROM
-SFR16(ROM_DATA,	ROM_DATA_HL_ADDR);	// data for flash-ROM writing, little-endian
-SFR(ROM_DATA_L,	ROM_DATA_HL_ADDR);	// data low byte for flash-ROM writing, data byte for Data-Flash reading/writing
-SFR(ROM_DAT_BUF,ROM_DATA_HL_ADDR);	// data butter register for flash-ROM erase/program operation
-SFR(ROM_DATA_H,	ROM_DATA_HH_ADDR);	// data high byte for flash-ROM writing
+
+SFR(ROM_DATA_HH,	ROM_DATA_HH_ADDR);	// High byte of flash-ROM data register high word (read only)
+SFR(ROM_DATA_HL,	ROM_DATA_HL_ADDR);	// Low byte of flash-ROM data register high word (read only)
+SFR16(ROM_DATA_HI,	ROM_DATA_HL_ADDR);	// 16-bit SFR consists of ROM_DATA_HL and ROM_DATA_HH
+
 SFR(ROM_BUF_MOD, ROM_BUF_MOD_ADDR); // Buffer mode register for flash-ROM erase/program operation
+SFR(ROM_DAT_BUF, ROM_DATA_HL_ADDR);	// data butter register for flash-ROM erase/program operation
+
+SFR(ROM_STATUS,	ROM_STATUS_ADDR);   // ReadOnly: ROM status SFR
+#define bROM_ADDR_OK      0x40      // ReadOnly: flash-ROM writing operation address valid flag, can be reviewed before or after operation: 0=invalid parameter, 1=address valid
+#define bROM_CMD_ERR      0x02      // ReadOnly: flash-ROM operation command error flag: 0=command accepted, 1=unknown command
+
+
 SFR(ROM_CTRL,	ROM_CTRL_ADDR);	    // WriteOnly: flash-ROM control
 #define ROM_CMD_ERASE     0xA6      // flash-ROM erase operation command
 #define ROM_CMD_WRITE     0x9A      // flash-ROM word or Data-Flash byte write operation command
@@ -365,12 +370,18 @@ SFR(ROM_CTRL,	ROM_CTRL_ADDR);	    // WriteOnly: flash-ROM control
                                     // 1: Select single-byte programming or 64-byte block
                                     // erase mode, and the data to be written is directly stored
                                     // in ROM_DAT_BUF
+
+SFR(ROM_ADDR_H,	ROM_ADDR_H_ADDR);	// address high byte for flash-ROM
+SFR(ROM_ADDR_L,	ROM_ADDR_L_ADDR);	// address low byte for flash-ROM
+SFR16(ROM_ADDR,	ROM_ADDR_L_ADDR);	// address for flash-ROM, little-endian
+
+SFR(ROM_DATA_LH,ROM_DATA_LH_ADDR);
+SFR(ROM_DATA_LL,ROM_DATA_LL_ADDR);
+SFR16(ROM_DATA_LO,ROM_DATA_LL_ADDR);
 #define MASK_ROM_ADDR     0x3F      // bit mask for end address for flash-ROM block program if bROM_BUF_BYTE=0
 
 
-SFR(ROM_STATUS,	ROM_STATUS_ADDR);   // ReadOnly: ROM status SFR
-#define bROM_ADDR_OK      0x40      // ReadOnly: flash-ROM writing operation address valid flag, can be reviewed before or after operation: 0=invalid parameter, 1=address valid
-#define bROM_CMD_ERR      0x02      // ReadOnly: flash-ROM operation command error flag: 0=command accepted, 1=unknown command
+
 
 /*  Port Registers  */
 
@@ -1190,9 +1201,8 @@ SFR(UH_EP_MOD, UH_EP_MOD_ADDR);     // host endpoint mode
 #define DATA_FLASH_ADDR   0xF000    // start address of Data-Flash
 #define BOOT_LOAD_ADDR    0xF400    // start address of boot loader program
 #define ROM_CFG_ADDR      0x3FFE    // chip configuration information address
-#define ROM_CHIP_ID_HX    0x14    // chip ID number highest byte (only low byte valid)
 #define ROM_CHIP_ID_LO    0x10    // chip ID number low word
 #define ROM_CHIP_ID_HI    0x12    // chip ID number high word
-
+#define ROM_CHIP_ID_HX    0x14    // chip ID number highest byte (only low byte valid)
 
 #endif  // __CH549_H__

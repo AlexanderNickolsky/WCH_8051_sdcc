@@ -7,10 +7,14 @@ Header file for CH552 microcontrollers.
 ****************************************
 --------------------------------------------------------------------------*/
 
-#ifndef __CH554_H__
-#define __CH554_H__
+#ifndef __CH552_H__
+#define __CH552_H__
 
 #include <compiler.h>
+
+#define _BV(n) (1<<n)
+
+extern void CfgFsys();
 
 /* SFR address table */
 
@@ -844,6 +848,9 @@ SFR(UEP1_DMA_H,	UEP1_DMA_H_ADDR);	// endpoint 1 buffer start address high byte
 
 /*----- Reference Information --------------------------------------------*/
 #define ID_CH554          0x54      // chip ID
+#define ID_CH553          0x53      // chip ID
+#define ID_CH552          0x52      // chip ID
+#define ID_CH551          0x51      // chip ID
 
 /* Interrupt routine address and interrupt number */
 #define INT_ADDR_INT0     0x0003    // interrupt vector address for INT0

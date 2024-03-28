@@ -13,7 +13,7 @@ static __code uint8_t DevDesc[] = {
     0x12,        // bLength
     0x01,        // bDescriptorType (Device)
     0x10, 0x01,  // bcdUSB 1.10
-    0xFF,        // bDeviceClass
+    0x02,        // bDeviceClass
     0x00,        // bDeviceSubClass
     0x02,        // bDeviceProtocol
     0x08,        // bMaxPacketSize0 8
@@ -26,8 +26,6 @@ static __code uint8_t DevDesc[] = {
     0x01         // bNumConfigurations 1
 // 18 bytes
 };
-
-//0x09,0x02,0x43,0x00,0x02,0x01,0x00,0xa0,0x32,
 
 static __code uint8_t CfgDesc[] = {
     0x09,        // bLength
@@ -44,7 +42,7 @@ static __code uint8_t CfgDesc[] = {
     0x00,        // bInterfaceNumber 0
     0x00,        // bAlternateSetting
     0x03,        // bNumEndpoints 3
-    0xFF,        // bInterfaceClass
+    0x02,        // bInterfaceClass
     0x01,        // bInterfaceSubClass
     0x02,        // bInterfaceProtocol
     0x00,        // iInterface (String Index)
@@ -68,16 +66,11 @@ static __code uint8_t CfgDesc[] = {
     0x81,        // bEndpointAddress (IN/D2H)
     0x03,        // bmAttributes (Interrupt)
     0x08, 0x00,  // wMaxPacketSize 8
-    0x01         // bInterval 1 (unit depends on device speed)
+    0x01,         // bInterval 1 (unit depends on device speed)
+
 // 39 bytes
 };
 
-
-#ifdef REPORT_BAUD_RATE
-__xdata uint8_t LineCoding[7]= {0x00,0xe1,0x00,0x00, 0x00,0x00,0x08};  //The initial baud rate is 57600, 1 stop bit, no parity, 8 data bits.
-#endif // REPORT_BAUD_RATE
-
-#define PRINTF_BUFFER_SIZE 15
 
 // xdata
 
@@ -93,9 +86,6 @@ static __xdata __at (EP0ADDR) uint8_t  Ep0Buffer[DEFAULT_ENDP0_SIZE];       // E
 static __xdata __at (EP1ADDR) uint8_t  Ep1Buffer[DEFAULT_ENDP1_SIZE];       //Endpoint 1 upload buffer
 static __xdata __at (EP2ADDR) uint8_t  Ep2Buffer[2*MAX_PACKET_SIZE];        //Endpoint 2 IN & OUT buffer, must be an even address
 
-static __xdata uint8_t  printf_buffer[PRINTF_BUFFER_SIZE];
-
-
 #ifdef NEED_READ
 __xdata uint8_t  RecBuf[64];
 #endif // NEED_READ
@@ -109,7 +99,7 @@ static const uint8_t * pDescr;                                                  
 
 USB_SETUP_REQ   SetupReqBuf;
 
-uint8_t __code DataBuf[] = {0x30,0x00,0xc3,0x00,0xff,0xec,0x9f,0xec,0xff,0xec,0xdf,0xec,
+static uint8_t __code DataBuf[] = {0x30,0x00,0xc3,0x00,0xff,0xec,0x9f,0xec,0xff,0xec,0xdf,0xec,
                             0xdf,0xec,0xdf,0xec,0x9f,0xec,0x9f,0xec,0x9f,0xec,0x9f,0xec,
                             0xff,0xec
                            };
@@ -130,11 +120,13 @@ int putchar(int c) {
 }
 */
 
+void	mDelayuS( uint16_t n );
+
 int putchar(int c) {
     Ep2Buffer[MAX_PACKET_SIZE] = c;
     UEP2_T_LEN = 1;
     UEP2_CTRL &= ~(bUEP_T_RES1 | bUEP_T_RES0);
-    while(( UEP2_CTRL & MASK_UEP_T_RES ) == UEP_T_RES_ACK);
+    while(( UEP2_CTRL & MASK_UEP_T_RES ) == UEP_T_RES_ACK );
     Flag = 0;
     return c;
 }
@@ -166,13 +158,13 @@ void USBCDCInit(void) {
 *******************************************************************************/
 void USBDeviceCfg(void) {
     USB_CTRL = 0x00;                                                           //Clear USB control register
-    USB_CTRL &= ~bUC_HOST_MODE;                                                //This bit selects the device mode
+    //USB_CTRL &= ~bUC_HOST_MODE;                                              //This bit selects the device mode
     USB_CTRL |=  bUC_DEV_PU_EN | bUC_INT_BUSY | bUC_DMA_EN;                    //USB device and internal pull-up enable, automatically return to NAK before interrupt flag is cleared
     USB_DEV_AD = 0x00;                                                         //Device address initialization
     //     USB_CTRL |= bUC_LOW_SPEED;
-    //     UDEV_CTRL |= bUD_LOW_SPEED;                                                //Select low speed 1.5M mode
+    //     UDEV_CTRL |= bUD_LOW_SPEED;                                         //Select low speed 1.5M mode
     USB_CTRL &= ~bUC_LOW_SPEED;
-    UDEV_CTRL &= ~bUD_LOW_SPEED;                                             //Select full speed 12M mode, the default mode
+    UDEV_CTRL &= ~bUD_LOW_SPEED;                                               //Select full speed 12M mode, the default mode
     UDEV_CTRL = bUD_PD_DIS;  // Disable DP / DM pull-down resistor
     UDEV_CTRL |= bUD_PORT_EN;                                                  //Enable physical port
 }
@@ -186,12 +178,12 @@ void USBDeviceCfg(void) {
 * Return         : None
 *******************************************************************************/
 void USBDeviceIntCfg(void) {
-    USB_INT_EN |= bUIE_SUSPEND;                                               //Enable device suspend interrupt
-    USB_INT_EN |= bUIE_TRANSFER;                                              //Enable USB transfer completion interrupt
-    USB_INT_EN |= bUIE_BUS_RST;                                               //Enable device mode USB bus reset interrupt
-    USB_INT_FG |= 0x1F;                                                       //Clear interrupt flag
-    IE_USB = 1;                                                               //Enable USB interrupt
-    EA = 1;                                                                   //Allow microcontroller interrupt
+    USB_INT_EN |= bUIE_SUSPEND;                 //Enable device suspend interrupt
+    USB_INT_EN |= bUIE_TRANSFER;                //Enable USB transfer completion interrupt
+    USB_INT_EN |= bUIE_BUS_RST;                 //Enable device mode USB bus reset interrupt
+    USB_INT_FG |= 0x1F;                         //Clear interrupt flag
+    IE_USB = 1;                                 //Enable USB interrupt
+    EA = 1;                                     //Allow microcontroller interrupt
 }
 
 /*******************************************************************************
@@ -245,7 +237,7 @@ void ReceiveData(void){}
 
 void USBInterrupt( void ) {
     uint16_t len;
-    if(UIF_TRANSFER)                                                              {
+    if(UIF_TRANSFER){
         switch (USB_INT_ST & (MASK_UIS_TOKEN | MASK_UIS_ENDP)) {
         case UIS_TOKEN_OUT | 2:
             len = USB_RX_LEN;
@@ -275,26 +267,6 @@ void USBInterrupt( void ) {
                     }
                 } else if(SetReqtp == 0x40) {
                     len = 9;
-#ifdef REPORT_BAUD_RATE
-                } else if ( ( UsbSetupBuf->bRequestType & USB_REQ_TYP_MASK ) != USB_REQ_TYP_STANDARD ) { //non-standard request
-                    switch( SetupReq ) {
-                    case GET_LINE_CODING:   //0x21  currently configured
-                        pDescr = LineCoding;
-                        len = sizeof(LineCoding);
-                        len = SetupLen >= DEFAULT_ENDP0_SIZE ? DEFAULT_ENDP0_SIZE : SetupLen;  // The length of this transfer
-                        memcpy(Ep0Buffer,pDescr,len);
-                        SetupLen -= len;
-                        pDescr += len;
-                        break;
-                    case SET_CONTROL_LINE_STATE:  //0x22  generates RS-232/V.24 style control signals
-                        break;
-                    case SET_LINE_CODING:         //0x20  Configure
-                        break;
-                    default:
-                        len = 0xFF;
-                        break;
-                    }
-#endif
                 } else {
                     switch(SetupReq) {
                     case USB_GET_DESCRIPTOR:
@@ -384,16 +356,15 @@ void USBInterrupt( void ) {
     }
     if (UIF_SUSPEND) {
         UIF_SUSPEND = 0;
-        if ( USB_MIS_ST & bUMS_SUSPEND ) {
-            while ( XBUS_AUX & bUART0_TX );
-            SAFE_MOD = 0x55;
-            SAFE_MOD = 0xAA;
-            WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;
-            PCON |= PD;
-            SAFE_MOD = 0x55;
-            SAFE_MOD = 0xAA;
-            WAKE_CTRL = 0x00;
-        }
+            //if ( USB_MIS_ST & bUMS_SUSPEND ) {
+            //SAFE_MOD = 0x55;
+            //SAFE_MOD = 0xAA;
+            //WAKE_CTRL = bWAK_BY_USB | bWAK_RXD0_LO;
+            //PCON |= PD;
+            //SAFE_MOD = 0x55;
+            //SAFE_MOD = 0xAA;
+            //WAKE_CTRL = 0x00;
+        //}
     } else {
         USB_INT_FG = 0x00;
     }

@@ -1,0 +1,24 @@
+# depslib dependency file v1.0
+1692950116 source:/home/aaa/Projects/WCH_8051/src/cfgfsys_ch552.c
+	<stdint.h>
+	<ch552.h>
+
+1700578539 /home/aaa/Projects/WCH_8051/include/ch552.h
+	<compiler.h>
+
+1693122805 source:/home/aaa/Projects/WCH_8051/src/delay_ch552.c
+	<stdint.h>
+	<ch552.h>
+
+1693076804 source:/home/aaa/Projects/WCH_8051/src/USB_Serial_ch552.c
+	<ch552.h>
+	<string.h>
+	<ch552_usb.h>
+	"USB_Serial.h"
+
+1691833718 /home/aaa/Projects/WCH_8051/include/ch552_usb.h
+	<stdint.h>
+
+1711639066 /home/aaa/Projects/WCH_8051/include/USB_Serial.h
+	<stdint.h>
+
