@@ -35,6 +35,7 @@ void main(void)
 
     while(1){
         if(counter != 0){
+            mDelaymS(15); // let it happen
             printf("%d\n",counter);
             mDelaymS(100);
             counter = 0;
